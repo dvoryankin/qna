@@ -3,6 +3,8 @@ class Answer < ApplicationRecord
   belongs_to :user
 
   has_many :attachments, as: :attachable, dependent: :destroy
+  has_many :votes, as: :votable, dependent: :destroy
+  has_many :comments, as: :commentable, dependent: :destroy
 
   validates :body, presence: true, length: { minimum: 10 }
 
@@ -15,5 +17,15 @@ class Answer < ApplicationRecord
       question.answers.where(best: true).find_each { |answer| answer.update!(best: false) }
       update!(best: true)
     end
+  end
+
+  # Вычисляемый рейтинг на основе голосов
+  def score
+    votes.sum(:value)
+  end
+
+  # Получить голос текущего пользователя
+  def vote_by(user)
+    votes.find_by(user: user)
   end
 end
