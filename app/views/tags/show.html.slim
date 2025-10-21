@@ -1,27 +1,22 @@
 .row
-  .col-lg-9
+  .col-12
     .d-flex.justify-content-between.align-items-center.mb-4
-      h1.h3.mb-0
+      div
+        h1.h3.mb-2
+          span.badge.bg-primary.me-2
+            i.bi.bi-tag.me-1
+            = @tag.name
+          | Questions
+
+        p.text-muted
+          = pluralize(@questions.count, 'question')
+          | tagged with
+          strong.ms-1 = @tag.name
+
+      = link_to questions_path, class: 'btn btn-outline-secondary' do
+        i.bi.bi-arrow-left.me-2
         | All Questions
-      = link_to new_question_path, class: 'btn btn-primary' do
-        i.bi.bi-plus-circle.me-2
-        | Ask Question
 
-    / Статистика
-    .card.mb-4.border-0.bg-light
-      .card-body
-        .row.text-center
-          .col-md-4
-            h4.mb-0 = @questions.count
-            small.text-muted questions
-          .col-md-4
-            h4.mb-0 = @questions.joins(:answers).count('DISTINCT answers.id')
-            small.text-muted answers
-          .col-md-4
-            h4.mb-0 = @questions.joins(:tags).count('DISTINCT tags.id')
-            small.text-muted tagged
-
-    / Список вопросов
     - if @questions.any?
       - @questions.each do |question|
         .card.mb-3.shadow-sm.question-card
@@ -63,36 +58,7 @@
     - else
       .alert.alert-info.text-center
         i.bi.bi-info-circle.me-2
-        | No questions yet. Be the first to ask!
-
-  .col-lg-3
-    / Sidebar
-    .card.mb-3
-      .card-header.bg-primary.text-white
-        i.bi.bi-tags.me-2
-        | Popular Tags
-      .card-body
-        - Tag.joins(:questions).group('tags.id').order('COUNT(questions.id) DESC').limit(10).each do |tag|
-          = link_to tag.name, tag_path(tag), class: 'badge bg-light text-dark me-1 mb-2 text-decoration-none'
-
-    .card
-      .card-header.bg-info.text-white
-        i.bi.bi-question-circle.me-2
-        | How to ask?
-      .card-body
-        ul.list-unstyled
-          li.mb-2
-            i.bi.bi-check-circle.text-success.me-2
-            | Search for similar questions
-          li.mb-2
-            i.bi.bi-check-circle.text-success.me-2
-            | Write a clear title
-          li.mb-2
-            i.bi.bi-check-circle.text-success.me-2
-            | Include all details
-          li
-            i.bi.bi-check-circle.text-success.me-2
-            | Add relevant tags
+        | No questions found with this tag yet.
 
 css:
   .question-card:hover {

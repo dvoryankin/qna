@@ -1,0 +1,32 @@
+.row
+  .col-12
+    h1.h3.mb-4
+      i.bi.bi-tags.me-2
+      | Tags
+
+    .alert.alert-info
+      i.bi.bi-info-circle.me-2
+      | A tag is a keyword or label that categorizes your question with other, similar questions.
+
+    .row.row-cols-1.row-cols-md-3.row-cols-lg-4.g-4
+      - @tags.each do |tag|
+        .col
+          .card.h-100.shadow-sm.tag-card
+            .card-body
+              h5.card-title
+                = link_to tag_path(tag), class: 'text-decoration-none' do
+                  span.badge.bg-primary.fs-6
+                    i.bi.bi-tag.me-1
+                    = tag.name
+
+              p.card-text.text-muted
+                = pluralize(tag.questions_count, 'question')
+
+              = link_to 'View questions', tag_path(tag), class: 'btn btn-sm btn-outline-primary'
+
+css:
+  .tag-card:hover {
+    transform: translateY(-5px);
+    transition: transform 0.3s ease;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  }

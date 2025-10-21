@@ -1,12 +1,75 @@
-= form_for @question do |f|
-  = render 'common/errors', resource: @question
-  = f.label :title
-  = f.text_field :title
-  br
-  br
-  = f.label :body
-  = f.text_area :body
-  = render 'attachments/form', f: f
-  = f.submit 'Create'
+.row
+  .col-lg-8.mx-auto
+    .card.shadow-sm
+      .card-header.bg-primary.text-white
+        h4.mb-0
+          i.bi.bi-question-circle.me-2
+          | Ask a Public Question
 
-p = link_to 'Back', questions_path
+      .card-body
+        = form_for @question, html: { class: 'needs-validation' } do |f|
+          - if @question.errors.any?
+            .alert.alert-danger
+              = render 'common/errors', resource: @question
+
+          .mb-4
+            = f.label :title, class: 'form-label fw-bold' do
+              | Title
+              span.text-danger *
+            = f.text_field :title, class: 'form-control form-control-lg', placeholder: 'e.g. How to implement user authentication in Rails?', required: true
+            small.form-text.text-muted
+              | Be specific and imagine you're asking a question to another person
+
+          .mb-4
+            = f.label :body, class: 'form-label fw-bold' do
+              | Body
+              span.text-danger *
+            = f.text_area :body, class: 'form-control', rows: 10, placeholder: 'Include all the information someone would need to answer your question...', required: true
+            small.form-text.text-muted
+              | Include all the details. What did you try? What do you expect to see?
+
+          .mb-4
+            = f.label :tag_list, class: 'form-label fw-bold' do
+              i.bi.bi-tags.me-1
+              | Tags
+            = f.text_field :tag_list, class: 'form-control', placeholder: 'e.g. ruby, rails, authentication (comma separated)', value: @question.tag_list
+            small.form-text.text-muted
+              | Add up to 5 tags to describe what your question is about. Use commas to separate tags.
+
+          .mb-4
+            label.form-label.fw-bold
+              i.bi.bi-paperclip.me-1
+              | Attachments (Optional)
+            = render 'attachments/form', f: f
+
+          .card.bg-light.mb-4
+            .card-body
+              h6.card-title
+                i.bi.bi-lightbulb.me-2.text-warning
+                | Tips for asking a great question
+              ul.mb-0
+                li Make sure your question is on-topic and appropriate for this site
+                li Write a title that summarizes the specific problem
+                li Introduce the problem before describing any attempts to solve it
+                li Help others reproduce the problem
+                li Include all relevant tags
+
+          .d-flex.gap-2
+            = f.submit 'Post Your Question', class: 'btn btn-primary btn-lg'
+            = link_to 'Cancel', questions_path, class: 'btn btn-outline-secondary btn-lg'
+
+    .card.mt-4
+      .card-header.bg-info.text-white
+        h5.mb-0
+          i.bi.bi-info-circle.me-2
+          | How to Format Your Question
+      .card-body
+        p.mb-2
+          strong Code:
+          | Use backticks for inline code or triple backticks for code blocks
+        p.mb-2
+          strong Lists:
+          | Use dashes or numbers for lists
+        p.mb-0
+          strong Links:
+          | Include relevant links to documentation or resources

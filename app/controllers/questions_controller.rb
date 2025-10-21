@@ -7,6 +7,7 @@ class QuestionsController < ApplicationController
   end
 
   def show
+    @question.increment_views!
     @answer = @question.answers.build
     @answer.attachments.build
   end
@@ -50,6 +51,6 @@ class QuestionsController < ApplicationController
   end
 
   def question_params
-     params.require(:question).permit(:title, :body, attachments_attributes: [:file, :id, :_destroy])
+     params.require(:question).permit(:title, :body, :tag_list, attachments_attributes: [:file, :id, :_destroy])
   end
 end

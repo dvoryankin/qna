@@ -1,24 +1,255 @@
-.question
-  = render @question
+.row
+  .col-lg-9
+    / Вопрос
+    .card.mb-4.shadow-sm
+      .card-body
+        .row
+          / Голосование для вопроса
+          .col-md-1.text-center
+            - if user_signed_in?
+              button.btn.btn-link.vote-btn data-type="question" data-id=@question.id data-action="upvote"
+                i.bi.bi-arrow-up-circle.fs-2.text-success
+              div.fw-bold.fs-4 id="question-score-#{@question.id}" = @question.score
+              button.btn.btn-link.vote-btn data-type="question" data-id=@question.id data-action="downvote"
+                i.bi.bi-arrow-down-circle.fs-2.text-danger
+            - else
+              i.bi.bi-arrow-up-circle.fs-2.text-muted
+              div.fw-bold.fs-4 = @question.score
+              i.bi.bi-arrow-down-circle.fs-2.text-muted
 
-- @question.answers.each do |answer|
-  - if answer.persisted?
-    div
-      p = answer.body
-      - if user_signed_in? && current_user.author?(answer)
-        = link_to 'Delete answer', answer, method: :delete
+          .col-md-11
+            h2.card-title = @question.title
+            .mb-3
+              - @question.tags.each do |tag|
+                = link_to tag_path(tag), class: 'text-decoration-none' do
+                  span.badge.bg-primary.me-1
+                    i.bi.bi-tag.me-1
+                    = tag.name
 
-      div
-br
-  - if user_signed_in?
-    = form_for([@question, @question.answers.build]) do |f|
-      - if @answer
-        = render 'common/errors', resource: @answer
-      = f.label :body
-      br
-      = f.text_area :body
-      br
-      = f.submit 'Add new answer'
+            .question-body.mb-4
+              = simple_format @question.body
 
+            / Вложения
+            = render 'attachments/attachments', entity: @question
 
-p = link_to 'Back', questions_path
+            .d-flex.justify-content-between.align-items-center
+              .text-muted.small
+                | Asked
+                = time_ago_in_words(@question.created_at)
+                | ago by
+                strong.ms-1 = @question.user.email
+
+              - if user_signed_in? && current_user.author?(@question)
+                div
+                  = link_to 'Edit', '', class: 'btn btn-sm btn-outline-primary edit-question-link me-2'
+                  = render 'form_edit', question: @question
+                  = link_to 'Delete', @question, method: :delete, data: { confirm: 'Are you sure?' }, class: 'btn btn-sm btn-outline-danger'
+
+        / Комментарии к вопросу
+        hr
+        .comments-section
+          h6.text-muted Comments
+          div id="question-comments-#{@question.id}"
+            - @question.comments.each do |comment|
+              .comment.mb-2.p-2.bg-light.rounded
+                = comment.body
+                |  –
+                small.text-muted
+                  = comment.user.email
+                  | ,
+                  = time_ago_in_words(comment.created_at)
+                  | ago
+          - if user_signed_in?
+            .mt-2
+              = form_with url: question_comments_path(@question), local: false, class: 'comment-form' do |f|
+                .input-group
+                  = f.text_field :body, class: 'form-control', placeholder: 'Add a comment...', name: 'comment[body]'
+                  button.btn.btn-primary type="submit"
+                    i.bi.bi-send
+
+    / Ответы
+    .mb-4
+      h3
+        = @question.answers.count
+        |  Answers
+
+    - @question.answers.first_best.each do |answer|
+      - if answer.persisted?
+        .card.mb-3.shadow-sm class=("#{'border-success border-3' if answer.best}")
+          .card-body
+            .row
+              / Голосование для ответа
+              .col-md-1.text-center
+                - if user_signed_in?
+                  button.btn.btn-link.vote-btn data-type="answer" data-id=answer.id data-action="upvote"
+                    i.bi.bi-arrow-up-circle.fs-2.text-success
+                  div.fw-bold.fs-4 id="answer-score-#{answer.id}" = answer.score
+                  button.btn.btn-link.vote-btn data-type="answer" data-id=answer.id data-action="downvote"
+                    i.bi.bi-arrow-down-circle.fs-2.text-danger
+                - else
+                  i.bi.bi-arrow-up-circle.fs-2.text-muted
+                  div.fw-bold.fs-4 = answer.score
+                  i.bi.bi-arrow-down-circle.fs-2.text-muted
+
+                / Кнопка "Лучший ответ"
+                - if user_signed_in? && current_user.author?(@question) && !answer.best
+                  .mt-2
+                    = link_to mark_best_answer_path(answer), method: :patch, class: 'btn btn-sm btn-outline-success', title: 'Mark as best answer' do
+                      i.bi.bi-check-circle
+                - elsif answer.best
+                  .mt-2
+                    span.badge.bg-success
+                      i.bi.bi-check-circle.me-1
+                      | Best
+
+              .col-md-11
+                .answer-body
+                  = simple_format answer.body
+
+                / Вложения ответа
+                - if answer.attachments.any?
+                  .mb-2.mt-2
+                    strong Attachments:
+                    - answer.attachments.each do |attachment|
+                      div
+                        = link_to attachment.file.url, class: 'text-decoration-none', target: '_blank' do
+                          i.bi.bi-paperclip
+                          = File.basename(attachment.file.url)
+
+                .d-flex.justify-content-between.align-items-center.mt-3
+                  .text-muted.small
+                    | Answered
+                    = time_ago_in_words(answer.created_at)
+                    | ago by
+                    strong.ms-1 = answer.user.email
+
+                  - if user_signed_in? && current_user.author?(answer)
+                    = link_to 'Delete', answer, method: :delete, data: { confirm: 'Are you sure?' }, class: 'btn btn-sm btn-outline-danger'
+
+            / Комментарии к ответу
+            hr
+            .comments-section
+              h6.text-muted Comments
+              div id="answer-comments-#{answer.id}"
+                - answer.comments.each do |comment|
+                  .comment.mb-2.p-2.bg-light.rounded
+                    = comment.body
+                    |  –
+                    small.text-muted
+                      = comment.user.email
+                      | ,
+                      = time_ago_in_words(comment.created_at)
+                      | ago
+              - if user_signed_in?
+                .mt-2
+                  = form_with url: answer_comments_path(answer), local: false, class: 'comment-form' do |f|
+                    .input-group
+                      = f.text_field :body, class: 'form-control', placeholder: 'Add a comment...', name: 'comment[body]'
+                      button.btn.btn-primary type="submit"
+                        i.bi.bi-send
+
+    / Форма добавления ответа
+    - if user_signed_in?
+      .card.shadow-sm
+        .card-header.bg-primary.text-white
+          h5.mb-0
+            i.bi.bi-chat-left-text.me-2
+            | Your Answer
+        .card-body
+          = form_for [@question, @question.answers.build] do |f|
+            - if @answer && @answer.errors.any?
+              .alert.alert-danger
+                = render 'common/errors', resource: @answer
+            .mb-3
+              = f.text_area :body, class: 'form-control', rows: 6, placeholder: 'Write your answer here...'
+            = f.submit 'Post Your Answer', class: 'btn btn-primary'
+    - else
+      .alert.alert-info
+        | You must
+        = link_to 'login', new_user_session_path
+        | to post an answer.
+
+    = link_to questions_path, class: 'btn btn-outline-secondary mt-3' do
+      i.bi.bi-arrow-left.me-2
+      | Back to Questions
+
+  .col-lg-3
+    / Sidebar со статистикой вопроса
+    .card.mb-3
+      .card-header.bg-info.text-white
+        i.bi.bi-bar-chart.me-2
+        | Question Stats
+      .card-body
+        ul.list-unstyled
+          li.mb-2
+            strong Views:
+            span.float-end = @question.views_count
+          li.mb-2
+            strong Score:
+            span.float-end = @question.score
+          li.mb-2
+            strong Answers:
+            span.float-end = @question.answers.count
+          li
+            strong Comments:
+            span.float-end = @question.comments.count
+
+    .card
+      .card-header.bg-secondary.text-white
+        i.bi.bi-tags.me-2
+        | Related Tags
+      .card-body
+        - @question.tags.each do |tag|
+          = link_to tag_path(tag), class: 'text-decoration-none' do
+            span.badge.bg-light.text-dark.me-1.mb-2
+              = tag.name
+
+javascript:
+  document.addEventListener('DOMContentLoaded', function() {
+    // Обработка голосования
+    document.querySelectorAll('.vote-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const type = this.dataset.type;
+        const id = this.dataset.id;
+        const action = this.dataset.action;
+
+        fetch(`/${type}s/${id}/${action}`, {
+          method: 'POST',
+          headers: {
+            'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content,
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.score !== undefined) {
+            document.querySelector(`#${type}-score-${id}`).textContent = data.score;
+          }
+        });
+      });
+    });
+
+    // Обработка отправки комментариев
+    document.querySelectorAll('.comment-form').forEach(form => {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+
+        fetch(this.action, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content,
+            'Accept': 'application/json'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.comment) {
+            location.reload();
+          }
+        });
+      });
+    });
+  });
