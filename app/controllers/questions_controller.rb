@@ -3,7 +3,7 @@ class QuestionsController < ApplicationController
   before_action :set_question, only: [:show, :edit, :update, :destroy]
 
   def index
-    @questions = Question.all
+    @questions = Question.includes(:user, :answers).all
   end
 
   def show
@@ -46,7 +46,7 @@ class QuestionsController < ApplicationController
   private
 
   def set_question
-    @question = Question.find(params[:id])
+    @question = Question.includes(:user, answers: [:user, :attachments]).find(params[:id])
   end
 
   def question_params
